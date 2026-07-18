@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フォーカス・タイマー・ガーデン 🌱</title>
+<style>
+  :root {
+    --bg1: #1a2a3a;
+    --bg2: #2d4a5a;
+    --accent: #7ed957;
+    --accent-dark: #5cb03a;
+    --break: #ffb347;
+    --text: #eaf6ec;
+    --muted: #9fb8ac;
+    --panel: rgba(255,255,255,0.06);
+    --panel-border: rgba(255,255,255,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    background: radial-gradient(circle at 50% 0%, var(--bg2), var(--bg1) 70%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 0;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+
+  .timer-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 24px;
+    padding: 28px 32px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    text-align: center;
+    width: 340px;
+    max-width: 100%;
+  }
+  .mode-tabs {
+    display: flex;
+    gap: 6px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 999px;
+    padding: 4px;
+    margin-bottom: 20px;
+  }
+  .mode-tabs button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 8px 4px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .mode-tabs button.active {
+    background: var(--accent);
+    color: #123;
+    font-weight: 600;
+  }
+  .mode-tabs button.active.break-mode { background: var(--break); }
+
+  .ring-wrap { position: relative; width: 220px; height: 220px; margin: 0 auto 16px; }
+  svg.ring { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 12; }
+  .ring-fg {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 12;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.3s linear, stroke 0.3s;
+  }
+  .ring-fg.break-mode { stroke: var(--break); }
+  .time-display {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .time-display .time {
+    font-size: 3rem;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .time-display .label { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+
+  .controls { display: flex; gap: 10px; justify-content: center; margin-top: 8px; }
+  .controls button {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.1s, filter 0.2s;
+  }
+  .controls button:active { transform: scale(0.95); }
+  .btn-primary { background: var(--accent); color: #123; flex: 1; }
+  .btn-primary.break-mode { background: var(--break); }
+  .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); }
+  .btn-secondary:hover { filter: brightness(1.3); }
+
+  .stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 22px 0 10px;
+    width: 340px;
+    max-width: 100%;
+  }
+  .stat { text-align: center; }
+  .stat .num { font-size: 1.5rem; font-weight: 600; color: var(--accent); }
+  .stat .cap { font-size: 0.72rem; color: var(--muted); }
+
+  .garden-wrap {
+    width: min(760px, 96vw);
+    margin-top: 8px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .garden-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 4px 8px;
+  }
+  .garden-header h2 { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+  .garden-header .hint { font-size: 0.72rem; color: var(--muted); }
+  .garden {
+    background: linear-gradient(to bottom, rgba(120,180,220,0.10), rgba(90,150,90,0.18));
+    border: 1px solid var(--panel-border);
+    border-radius: 20px 20px 0 0;
+    min-height: 180px;
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    padding: 12px 16px 0;
+    gap: 2px;
+  }
+  .garden::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: 0; height: 34px;
+    background: linear-gradient(to bottom, #6b4a2f, #4a3220);
+    z-index: 0;
+  }
+  .plant {
+    position: relative;
+    z-index: 1;
+    width: 44px;
+    height: 84px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    cursor: default;
+    animation: sprout 0.6s cubic-bezier(.34,1.56,.64,1);
+    transform-origin: bottom center;
+  }
+  @keyframes sprout {
+    0% { transform: scale(0) translateY(10px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .plant svg { overflow: visible; }
+  .empty-msg {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 0.85rem; z-index: 1;
+    text-align: center; padding: 20px;
+  }
+  .sway { animation: sway 4s ease-in-out infinite; transform-origin: bottom center; }
+  @keyframes sway {
+    0%,100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+  }
+
+  footer { color: var(--muted); font-size: 0.7rem; padding: 14px; text-align: center; }
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: var(--accent); color: #123; padding: 12px 22px; border-radius: 999px;
+    font-weight: 600; font-size: 0.9rem; box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    opacity: 0; transition: all 0.4s cubic-bezier(.34,1.56,.64,1); z-index: 100;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  .link-btn {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 0.72rem; text-decoration: underline; font-family: inherit;
+  }
+  .link-btn:hover { color: var(--text); }
+</style>
+</head>
+<body>
+  <h1>🌱 フォーカス・タイマー・ガーデン</h1>
+  <div class="subtitle">集中するたびに、庭に植物が育ちます</div>
+
+  <div class="timer-card">
+    <div class="mode-tabs">
+      <button data-mode="focus" class="active">集中 25分</button>
+      <button data-mode="short">休憩 5分</button>
+      <button data-mode="long">長休憩 15分</button>
+    </div>
+
+    <div class="ring-wrap">
+      <svg class="ring" width="220" height="220" viewBox="0 0 220 220">
+        <circle class="ring-bg" cx="110" cy="110" r="100"></circle>
+        <circle class="ring-fg" cx="110" cy="110" r="100"
+          stroke-dasharray="628.3" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="time-display">
+        <div class="time" id="time">25:00</div>
+        <div class="label" id="modeLabel">集中タイム</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-primary" id="startBtn">スタート</button>
+      <button class="btn-secondary" id="resetBtn">リセット</button>
+      <button class="btn-secondary" id="skipBtn">スキップ</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="statToday">0</div><div class="cap">今日の集中</div></div>
+    <div class="stat"><div class="num" id="statTotal">0</div><div class="cap">植えた総数</div></div>
+    <div class="stat"><div class="num" id="statStreak">0</div><div class="cap">連続日数</div></div>
+  </div>
+
+  <div class="garden-wrap">
+    <div class="garden-header">
+      <h2>あなたの庭</h2>
+      <button class="link-btn" id="clearBtn">庭をリセット</button>
+    </div>
+    <div class="garden" id="garden">
+      <div class="empty-msg" id="emptyMsg">まだ何も植わっていません。<br>集中セッションを1つ完了すると、最初の芽が出ます 🌱</div>
+    </div>
+  </div>
+
+  <footer>集中セッション完了ごとに植物が1つ育ちます · データはこのブラウザに保存されます</footer>
+  <div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const DURATIONS = { focus: 25 * 60, short: 5 * 60, long: 15 * 60 };
+  const MODE_LABELS = { focus: "集中タイム", short: "小休憩", long: "長い休憩" };
+  const RING_CIRC = 2 * Math.PI * 100; // 628.3
+  const STORE_KEY = "focusGarden.v1";
+
+  // ---- State ----
+  let mode = "focus";
+  let remaining = DURATIONS[mode];
+  let running = false;
+  let ticker = null;
+  let endTime = 0;
+
+  let data = loadData();
+
+  // ---- Elements ----
+  const el = (id) => document.getElementById(id);
+  const timeEl = el("time");
+  const modeLabelEl = el("modeLabel");
+  const ringFg = document.querySelector(".ring-fg");
+  const startBtn = el("startBtn");
+  const gardenEl = el("garden");
+  const emptyMsg = el("emptyMsg");
+  const toast = el("toast");
+  const tabs = document.querySelectorAll(".mode-tabs button");
+  const primaryBtn = document.querySelector(".btn-primary");
+  const activeTab = () => document.querySelector(".mode-tabs button.active");
+
+  // ---- Persistence ----
+  function loadData() {
+    try {
+      const d = JSON.parse(localStorage.getItem(STORE_KEY));
+      if (d && Array.isArray(d.plants)) return d;
+    } catch (e) {}
+    return { plants: [], totalCompleted: 0, days: {} };
+  }
+  function saveData() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  function todayKey() {
+    const n = new Date();
+    return n.getFullYear() + "-" + (n.getMonth() + 1) + "-" + n.getDate();
+  }
+
+  // ---- Timer core ----
+  function setMode(newMode) {
+    mode = newMode;
+    remaining = DURATIONS[mode];
+    stop();
+    tabs.forEach(t => t.classList.toggle("active", t.dataset.mode === mode));
+    const isBreak = mode !== "focus";
+    activeTab().classList.toggle("break-mode", isBreak);
+    ringFg.classList.toggle("break-mode", isBreak);
+    primaryBtn.classList.toggle("break-mode", isBreak);
+    modeLabelEl.textContent = MODE_LABELS[mode];
+    render();
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    endTime = Date.now() + remaining * 1000;
+    startBtn.textContent = "一時停止";
+    ticker = setInterval(tick, 200);
+    tick();
+  }
+  function pause() {
+    if (!running) return;
+    running = false;
+    remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+    clearInterval(ticker);
+    startBtn.textContent = "再開";
+  }
+  function stop() {
+    running = false;
+    clearInterval(ticker);
+    startBtn.textContent = "スタート";
+  }
+  function reset() {
+    remaining = DURATIONS[mode];
+    stop();
+    render();
+  }
+  function tick() {
+    remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+    if (remaining <= 0) { complete(); return; }
+    render();
+  }
+
+  function complete() {
+    stop();
+    remaining = 0;
+    render();
+    beep();
+    if (mode === "focus") {
+      addPlant();
+      showToast("🌱 集中完了！植物が育ちました");
+      // auto-suggest a break next
+      setTimeout(() => setMode(data.plants.length % 4 === 0 ? "long" : "short"), 900);
+    } else {
+      showToast("☕ 休憩おわり。次の集中へ！");
+      setTimeout(() => setMode("focus"), 900);
+    }
+  }
+
+  // ---- Garden ----
+  function addPlant() {
+    const seed = Math.floor(Math.random() * 1e9);
+    data.plants.push(seed);
+    data.totalCompleted += 1;
+    const tk = todayKey();
+    data.days[tk] = (data.days[tk] || 0) + 1;
+    saveData();
+    renderStats();
+    renderNewPlant(seed, true);
+  }
+
+  // Deterministic pseudo-random from a seed
+  function rng(seed) {
+    let s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+  }
+
+  const FLOWER_COLORS = ["#ff6b9d","#ffd93d","#ff8c42","#c77dff","#4ea8de","#ffffff","#ff5c8a"];
+  const LEAF_COLORS = ["#7ed957","#5cb03a","#69b34c","#8fd14f","#4caf50"];
+
+  function makePlantSVG(seed) {
+    const r = rng(seed);
+    const type = Math.floor(r() * 3); // 0 flower, 1 bush, 2 sprout/tree
+    const leaf = LEAF_COLORS[Math.floor(r() * LEAF_COLORS.length)];
+    const flower = FLOWER_COLORS[Math.floor(r() * FLOWER_COLORS.length)];
+    const h = 46 + Math.floor(r() * 30);
+    const bend = (r() - 0.5) * 10;
+    let inner = "";
+
+    // stem
+    inner += `<path d="M22 84 Q${22 + bend} ${84 - h/2} 22 ${84 - h}" stroke="${leaf}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    // leaves
+    inner += `<ellipse cx="14" cy="${84 - h*0.45}" rx="9" ry="4.5" fill="${leaf}" transform="rotate(-30 14 ${84 - h*0.45})"/>`;
+    inner += `<ellipse cx="30" cy="${84 - h*0.62}" rx="9" ry="4.5" fill="${leaf}" transform="rotate(30 30 ${84 - h*0.62})"/>`;
+
+    const topY = 84 - h;
+    if (type === 0) {
+      // flower with petals
+      const petals = 5 + Math.floor(r() * 3);
+      for (let i = 0; i < petals; i++) {
+        const ang = (i / petals) * Math.PI * 2;
+        const px = 22 + Math.cos(ang) * 8;
+        const py = topY + Math.sin(ang) * 8;
+        inner += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5" fill="${flower}"/>`;
+      }
+      inner += `<circle cx="22" cy="${topY}" r="5" fill="#ffd93d"/>`;
+    } else if (type === 1) {
+      // bush / berries
+      inner += `<circle cx="22" cy="${topY + 2}" r="12" fill="${leaf}"/>`;
+      inner += `<circle cx="15" cy="${topY + 6}" r="9" fill="${leaf}"/>`;
+      inner += `<circle cx="29" cy="${topY + 6}" r="9" fill="${leaf}"/>`;
+      for (let i = 0; i < 4; i++) {
+        inner += `<circle cx="${(14 + r()*16).toFixed(1)}" cy="${(topY + r()*10).toFixed(1)}" r="2.5" fill="${flower}"/>`;
+      }
+    } else {
+      // little tree / rounded canopy
+      inner += `<circle cx="22" cy="${topY + 4}" r="14" fill="${leaf}"/>`;
+      inner += `<circle cx="22" cy="${topY - 4}" r="10" fill="${leaf}"/>`;
+      inner += `<circle cx="14" cy="${topY + 2}" r="8" fill="${leaf}"/>`;
+      inner += `<circle cx="30" cy="${topY + 2}" r="8" fill="${leaf}"/>`;
+    }
+    return `<svg width="44" height="84" viewBox="0 0 44 84"><g class="sway">${inner}</g></svg>`;
+  }
+
+  function renderNewPlant(seed) {
+    emptyMsg.style.display = "none";
+    const div = document.createElement("div");
+    div.className = "plant";
+    div.innerHTML = makePlantSVG(seed);
+    gardenEl.appendChild(div);
+  }
+
+  function renderGarden() {
+    gardenEl.querySelectorAll(".plant").forEach(p => p.remove());
+    if (data.plants.length === 0) {
+      emptyMsg.style.display = "flex";
+      return;
+    }
+    emptyMsg.style.display = "none";
+    // cap visible plants for performance, keep most recent
+    const visible = data.plants.slice(-120);
+    for (const seed of visible) {
+      const div = document.createElement("div");
+      div.className = "plant";
+      div.style.animation = "none";
+      div.innerHTML = makePlantSVG(seed);
+      gardenEl.appendChild(div);
+    }
+  }
+
+  // ---- Stats ----
+  function computeStreak() {
+    let streak = 0;
+    const d = new Date();
+    for (;;) {
+      const key = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+      if (data.days[key] > 0) { streak++; d.setDate(d.getDate() - 1); }
+      else break;
+    }
+    return streak;
+  }
+  function renderStats() {
+    el("statToday").textContent = data.days[todayKey()] || 0;
+    el("statTotal").textContent = data.totalCompleted;
+    el("statStreak").textContent = computeStreak();
+  }
+
+  // ---- Render ----
+  function fmt(s) {
+    const m = Math.floor(s / 60), sec = s % 60;
+    return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+  }
+  function render() {
+    timeEl.textContent = fmt(remaining);
+    const frac = remaining / DURATIONS[mode];
+    ringFg.style.strokeDasharray = RING_CIRC;
+    ringFg.style.strokeDashoffset = RING_CIRC * (1 - frac);
+    document.title = (running ? fmt(remaining) + " · " : "") + "フォーカス・ガーデン";
+  }
+
+  // ---- Feedback ----
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+  }
+  function beep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [523.25, 659.25, 783.99]; // C E G
+      notes.forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "sine"; o.frequency.value = f;
+        o.connect(g); g.connect(ctx.destination);
+        const t = ctx.currentTime + i * 0.13;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+        o.start(t); o.stop(t + 0.42);
+      });
+    } catch (e) {}
+  }
+
+  // ---- Events ----
+  startBtn.addEventListener("click", () => { running ? pause() : start(); });
+  el("resetBtn").addEventListener("click", reset);
+  el("skipBtn").addEventListener("click", complete);
+  tabs.forEach(t => t.addEventListener("click", () => setMode(t.dataset.mode)));
+  el("clearBtn").addEventListener("click", () => {
+    if (confirm("庭のすべての植物と記録を消しますか？この操作は元に戻せません。")) {
+      data = { plants: [], totalCompleted: 0, days: {} };
+      saveData(); renderGarden(); renderStats();
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && e.target === document.body) { e.preventDefault(); running ? pause() : start(); }
+  });
+
+  // ---- Init ----
+  setMode("focus");
+  renderGarden();
+  renderStats();
+  render();
+})();
+</script>
+</body>
+</html>
