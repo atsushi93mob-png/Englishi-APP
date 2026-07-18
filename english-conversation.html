@@ -121,6 +121,22 @@
     border-radius: 10px; padding: 8px; font-size: 0.78rem; cursor: pointer; font-family: inherit; font-weight: 600;
   }
   .learn-btn.learned { background: rgba(70,211,138,0.15); border-color: var(--good); color: var(--good); }
+  .mic-btn {
+    flex: 1; background: transparent; border: 1px solid rgba(255,207,92,0.4); color: var(--gold);
+    border-radius: 10px; padding: 8px; font-size: 0.78rem; cursor: pointer; font-family: inherit; font-weight: 600;
+  }
+  .mic-btn.recording { background: rgba(255,122,122,0.18); border-color: var(--bad); color: var(--bad); animation: pulse 1s infinite; }
+  .mic-btn:disabled { opacity: 0.4; cursor: default; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .pron-result { margin-top: 10px; padding: 10px 12px; border-radius: 10px; font-size: 0.82rem; line-height: 1.6; display: none; }
+  .pron-result.show { display: block; }
+  .pron-result .heard { color: var(--muted); font-size: 0.76rem; margin-top: 4px; }
+  .pron-result .score-line { font-weight: 700; }
+  .pron-result.good { background: rgba(70,211,138,0.14); border: 1px solid rgba(70,211,138,0.4); }
+  .pron-result.mid { background: rgba(255,207,92,0.14); border: 1px solid rgba(255,207,92,0.4); }
+  .pron-result.low { background: rgba(255,122,122,0.14); border: 1px solid rgba(255,122,122,0.4); }
+  .pron-result .word-ok { color: var(--good); }
+  .pron-result .word-ng { color: var(--bad); text-decoration: underline; }
 
   /* Dialogue */
   .bubble { display: flex; margin-bottom: 12px; gap: 8px; align-items: flex-end; }
@@ -148,6 +164,13 @@
   .quiz-q { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
   .quiz-prompt { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
   .quiz-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 18px; }
+  .listen-play {
+    width: 84px; height: 84px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--accent); color: #06192e; font-size: 2rem; margin: 4px auto 8px;
+    display: flex; align-items: center; justify-content: center; transition: transform 0.1s;
+    box-shadow: 0 8px 24px rgba(77,163,255,0.35);
+  }
+  .listen-play:active { transform: scale(0.92); }
   .quiz-opts { display: flex; flex-direction: column; gap: 10px; }
   .quiz-opt {
     background: var(--panel-2); border: 1px solid var(--panel-border); color: var(--text);
@@ -225,15 +248,21 @@
       <div class="cat-card" style="text-align:center; cursor:default;">
         <div class="emoji">✏️</div>
         <div class="title" style="margin-top:8px;">4択クイズ</div>
-        <div class="en" style="margin-top:6px; line-height:1.6;">日本語の意味に合う英語表現を選びます。<br>全10問。発音も聞けます。</div>
+        <div class="en" style="margin-top:6px; line-height:1.6;">全10問。まず出題タイプを選びましょう。</div>
       </div>
-      <button class="primary-btn" id="quiz-begin" style="margin-top:14px;">クイズを始める</button>
+      <div class="mode-switch" style="margin-top:14px; display:flex; gap:8px;">
+        <button class="mini-btn active" data-qmode="meaning" style="flex:1;">📖 意味から選ぶ</button>
+        <button class="mini-btn" data-qmode="listening" style="flex:1;">🎧 リスニング</button>
+      </div>
+      <div class="hint" id="quiz-mode-desc">日本語の意味に合う英語表現を選びます。</div>
+      <button class="primary-btn" id="quiz-begin" style="margin-top:6px;">クイズを始める</button>
       <div class="hint">覚えた表現がたまるほど、いろいろな表現から出題されます。</div>
     </div>
     <div id="quiz-play" style="display:none;">
       <div class="quiz-progress" id="quiz-progress"></div>
       <div class="quiz-card">
-        <div class="quiz-q">この意味の英語は？</div>
+        <div class="quiz-q" id="quiz-q"></div>
+        <button class="listen-play" id="quiz-listen" style="display:none;">🔊</button>
         <div class="quiz-prompt" id="quiz-prompt"></div>
         <div class="quiz-sub" id="quiz-sub"></div>
         <div class="quiz-opts" id="quiz-opts"></div>
@@ -254,6 +283,7 @@
 
   <footer>
     音声はブラウザの読み上げ機能を使用します（音が出ない場合は端末の音量をご確認ください）。<br>
+    発音チェックはマイクの許可が必要です（Chrome / Edge / Safari 推奨）。<br>
     学習データはこのブラウザ内にのみ保存されます。 ·
     <button class="reset-link" id="reset-all">記録をリセット</button>
   </footer>
@@ -400,6 +430,74 @@ const CATEGORIES = [
       { s: "b", en: "Great. Looking forward to it.", jp: "よかったです。楽しみにしています。" },
     ],
   },
+  {
+    id: "time", emoji: "⏰", title: "時間・数字", en: "Time & Numbers",
+    phrases: [
+      { en: "What time is it now?", ph: "ワット タイム イズ イット ナウ", jp: "今、何時ですか？" },
+      { en: "It's half past seven.", ph: "イッツ ハーフ パスト セブン", jp: "7時半です。" },
+      { en: "The meeting is at ten.", ph: "ザ ミーティング イズ アット テン", jp: "会議は10時です。" },
+      { en: "How long does it take?", ph: "ハウ ロング ダズ イット テイク", jp: "どのくらい時間がかかりますか？" },
+      { en: "About twenty minutes.", ph: "アバウト トゥエンティ ミニッツ", jp: "だいたい20分です。" },
+      { en: "I'll be there in five minutes.", ph: "アイル ビー ゼア イン ファイブ ミニッツ", jp: "5分で着きます。" },
+    ],
+    dialogue: [
+      { s: "a", en: "What time does the store open?", jp: "お店は何時に開きますか？" },
+      { s: "b", en: "It opens at nine in the morning.", jp: "朝9時に開きます。" },
+      { s: "a", en: "How long does it take to get there?", jp: "そこまでどのくらいかかりますか？" },
+      { s: "b", en: "About fifteen minutes by bus.", jp: "バスで15分くらいです。" },
+    ],
+  },
+  {
+    id: "weather", emoji: "☀️", title: "天気・季節", en: "Weather & Seasons",
+    phrases: [
+      { en: "How's the weather today?", ph: "ハウズ ザ ウェザー トゥデイ", jp: "今日の天気はどうですか？" },
+      { en: "It's sunny and warm.", ph: "イッツ サニー アンド ウォーム", jp: "晴れていて暖かいです。" },
+      { en: "It's going to rain later.", ph: "イッツ ゴーイング トゥ レイン レイター", jp: "あとで雨が降りそうです。" },
+      { en: "It's really cold today.", ph: "イッツ リアリー コールド トゥデイ", jp: "今日は本当に寒いです。" },
+      { en: "Don't forget your umbrella.", ph: "ドント フォーゲット ユア アンブレラ", jp: "傘を忘れないでね。" },
+      { en: "I love spring the best.", ph: "アイ ラブ スプリング ザ ベスト", jp: "春が一番好きです。" },
+    ],
+    dialogue: [
+      { s: "a", en: "How's the weather in Tokyo?", jp: "東京の天気はどう？" },
+      { s: "b", en: "It's cloudy and a bit cold.", jp: "曇りで少し寒いよ。" },
+      { s: "a", en: "Is it going to rain?", jp: "雨は降りそう？" },
+      { s: "b", en: "Maybe. Take your umbrella.", jp: "たぶんね。傘を持って行って。" },
+    ],
+  },
+  {
+    id: "health", emoji: "🏥", title: "体調・病院", en: "Health",
+    phrases: [
+      { en: "I don't feel well.", ph: "アイ ドント フィール ウェル", jp: "気分が良くありません。" },
+      { en: "I have a headache.", ph: "アイ ハブ ア ヘデイク", jp: "頭が痛いです。" },
+      { en: "I have a fever.", ph: "アイ ハブ ア フィーバー", jp: "熱があります。" },
+      { en: "Where is the nearest hospital?", ph: "ウェア イズ ザ ニアレスト ホスピタル", jp: "一番近い病院はどこですか？" },
+      { en: "I need to see a doctor.", ph: "アイ ニード トゥ シー ア ドクター", jp: "医者に診てもらいたいです。" },
+      { en: "Take care of yourself.", ph: "テイク ケア オブ ユアセルフ", jp: "お大事にしてください。" },
+    ],
+    dialogue: [
+      { s: "a", en: "You look pale. Are you okay?", jp: "顔色が悪いよ。大丈夫？" },
+      { s: "b", en: "I have a headache and a fever.", jp: "頭痛と熱があるんだ。" },
+      { s: "a", en: "You should see a doctor.", jp: "医者に診てもらったほうがいいよ。" },
+      { s: "b", en: "You're right. Thank you.", jp: "そうだね。ありがとう。" },
+    ],
+  },
+  {
+    id: "feelings", emoji: "😊", title: "気持ちを伝える", en: "Feelings",
+    phrases: [
+      { en: "I'm so happy!", ph: "アイム ソー ハッピー", jp: "とてもうれしいです！" },
+      { en: "That's wonderful news.", ph: "ザッツ ワンダフル ニューズ", jp: "それは素晴らしい知らせですね。" },
+      { en: "I'm a little worried.", ph: "アイム ア リトル ウォリード", jp: "少し心配しています。" },
+      { en: "I'm really sorry.", ph: "アイム リアリー ソーリー", jp: "本当にごめんなさい。" },
+      { en: "Don't worry, it's okay.", ph: "ドント ウォリー イッツ オーケー", jp: "心配しないで、大丈夫だよ。" },
+      { en: "Thank you so much!", ph: "サンキュー ソー マッチ", jp: "本当にありがとう！" },
+    ],
+    dialogue: [
+      { s: "a", en: "I passed the exam!", jp: "試験に受かったよ！" },
+      { s: "b", en: "That's wonderful news! Congratulations!", jp: "それは素晴らしい！おめでとう！" },
+      { s: "a", en: "Thank you so much for your help.", jp: "手伝ってくれて本当にありがとう。" },
+      { s: "b", en: "I'm so happy for you.", jp: "自分のことのようにうれしいよ。" },
+    ],
+  },
 ];
 
 /* ---------- Storage ---------- */
@@ -460,6 +558,58 @@ function speak(text) {
   speechSynthesis.speak(u);
 }
 
+/* ---------- Speech recognition (pronunciation check) ---------- */
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+const speechRecSupported = !!SpeechRec;
+let activeRec = null;
+
+// Normalize a sentence into comparable words: lowercase, strip punctuation.
+function toWords(text) {
+  return text.toLowerCase()
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+// Compare heard words against target; returns { score, marks } where marks
+// is an array of {word, ok} for the TARGET words (in order).
+function scorePronunciation(target, heard) {
+  const tWords = toWords(target);
+  const hWords = toWords(heard);
+  const pool = {};
+  hWords.forEach(w => { pool[w] = (pool[w] || 0) + 1; });
+  let hit = 0;
+  const marks = tWords.map(w => {
+    if (pool[w] > 0) { pool[w]--; hit++; return { word: w, ok: true }; }
+    return { word: w, ok: false };
+  });
+  const score = tWords.length ? Math.round((hit / tWords.length) * 100) : 0;
+  return { score, marks };
+}
+// Start recognition for a phrase; callbacks report lifecycle.
+function recognizeSpeech(onStart, onResult, onError, onEnd) {
+  if (!speechRecSupported) { onError && onError("unsupported"); return null; }
+  try {
+    if (activeRec) { activeRec.abort(); activeRec = null; }
+    const rec = new SpeechRec();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.continuous = false;
+    let got = false;
+    rec.onstart = () => onStart && onStart();
+    rec.onresult = (e) => { got = true; onResult && onResult(e.results[0][0].transcript || ""); };
+    rec.onerror = (e) => onError && onError(e.error || "error");
+    rec.onend = () => { activeRec = null; onEnd && onEnd(got); };
+    activeRec = rec;
+    rec.start();
+    return rec;
+  } catch (err) {
+    onError && onError("start-failed");
+    return null;
+  }
+}
+
 /* ---------- Stats render ---------- */
 function renderStats() {
   document.getElementById("stat-learned").textContent = learnedCount();
@@ -510,6 +660,7 @@ function renderPhrases() {
     const learned = isLearned(currentCat.id, i);
     const div = document.createElement("div");
     div.className = "phrase";
+    const micLabel = speechRecSupported ? '🎤 発音チェック' : '🎤 非対応';
     div.innerHTML =
       '<div class="en-row">' +
         '<div><div class="en-text">' + p.en + '</div>' +
@@ -521,7 +672,9 @@ function renderPhrases() {
         '<button class="learn-btn' + (learned ? ' learned' : '') + '">' +
           (learned ? '✓ 覚えた' : 'まだ覚えていない') +
         '</button>' +
-      '</div>';
+        '<button class="mic-btn"' + (speechRecSupported ? '' : ' disabled') + '>' + micLabel + '</button>' +
+      '</div>' +
+      '<div class="pron-result"></div>';
     div.querySelector(".speak-btn").addEventListener("click", () => speak(p.en));
     div.querySelector(".learn-btn").addEventListener("click", () => {
       const key = phraseKey(currentCat.id, i);
@@ -532,8 +685,69 @@ function renderPhrases() {
       renderStats();
       renderCats();
     });
+    const micBtn = div.querySelector(".mic-btn");
+    const resultBox = div.querySelector(".pron-result");
+    if (speechRecSupported) {
+      micBtn.addEventListener("click", () => startPronCheck(p, i, micBtn, resultBox));
+    }
     wrap.appendChild(div);
   });
+}
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function startPronCheck(p, i, micBtn, resultBox) {
+  if (activeRec) { activeRec.abort(); activeRec = null; }
+  resultBox.className = "pron-result show";
+  resultBox.innerHTML = "🎤 マイクに向かって英語を話してください…";
+  micBtn.classList.add("recording");
+  micBtn.textContent = "● 録音中… (話してください)";
+  const finish = () => { micBtn.classList.remove("recording"); micBtn.textContent = "🎤 もう一度チェック"; };
+  recognizeSpeech(
+    null,
+    (transcript) => {
+      const { score, marks } = scorePronunciation(p.en, transcript);
+      const cls = score >= 80 ? "good" : score >= 50 ? "mid" : "low";
+      const emoji = score >= 80 ? "🎉" : score >= 50 ? "👍" : "💪";
+      const label = score >= 80 ? "とても上手！" : score >= 50 ? "いい調子！" : "もう一度チャレンジ！";
+      const marked = marks.map(m =>
+        '<span class="' + (m.ok ? "word-ok" : "word-ng") + '">' + escapeHtml(m.word) + '</span>'
+      ).join(" ");
+      resultBox.className = "pron-result show " + cls;
+      resultBox.innerHTML =
+        '<div class="score-line">' + emoji + ' スコア ' + score + '点 — ' + label + '</div>' +
+        '<div style="margin-top:6px;">' + marked + '</div>' +
+        '<div class="heard">認識された発音：' + (transcript ? escapeHtml(transcript) : "（聞き取れませんでした）") + '</div>';
+      // A confident attempt counts as learning activity, and a great one marks it learned.
+      markActivity();
+      if (score >= 80 && !isLearned(currentCat.id, i)) {
+        state.learned[phraseKey(currentCat.id, i)] = true;
+        saveState();
+        renderStats();
+        renderCats();
+      }
+    },
+    (err) => {
+      let msg;
+      if (err === "not-allowed" || err === "service-not-allowed")
+        msg = "マイクの使用が許可されていません。ブラウザの設定を確認してください。";
+      else if (err === "no-speech")
+        msg = "音声を検出できませんでした。もう一度お試しください。";
+      else if (err === "unsupported")
+        msg = "このブラウザは音声認識に対応していません。";
+      else
+        msg = "音声認識でエラーが発生しました。もう一度お試しください。";
+      resultBox.className = "pron-result show low";
+      resultBox.textContent = "⚠️ " + msg;
+    },
+    (got) => {
+      finish();
+      if (!got && resultBox.innerHTML.indexOf("話してください") !== -1) {
+        resultBox.className = "pron-result show mid";
+        resultBox.textContent = "音声を検出できませんでした。もう一度お試しください。";
+      }
+    }
+  );
 }
 function renderDialogue() {
   const wrap = document.getElementById("detail-dialogue");
@@ -583,12 +797,13 @@ function shuffle(a) {
   }
   return arr;
 }
+let quizMode = "meaning"; // "meaning" (JP→choose EN) or "listening" (audio→choose JP)
 function buildQuiz() {
   const all = allPhrases();
   const learned = all.filter(p => p.learned);
   const pool = learned.length >= 4 ? learned : all;
   const questions = shuffle(pool).slice(0, Math.min(10, pool.length));
-  quiz = { questions, i: 0, correct: 0, answered: false };
+  quiz = { questions, i: 0, correct: 0, answered: false, mode: quizMode };
 }
 function resetQuizStart() {
   document.getElementById("quiz-start").style.display = "block";
@@ -606,37 +821,59 @@ function startQuiz() {
 function renderQuestion() {
   quiz.answered = false;
   const q = quiz.questions[quiz.i];
+  const listening = quiz.mode === "listening";
   document.getElementById("quiz-progress").textContent = "第 " + (quiz.i + 1) + " 問 / " + quiz.questions.length + " 問  ·  正解 " + quiz.correct;
-  document.getElementById("quiz-prompt").textContent = q.jp;
+  document.getElementById("quiz-q").textContent = listening ? "音声を聞いて意味を選ぼう" : "この意味の英語は？";
   document.getElementById("quiz-sub").textContent = "";
+  const listenBtn = document.getElementById("quiz-listen");
+  const promptEl = document.getElementById("quiz-prompt");
+  const optsWrap = document.getElementById("quiz-opts");
+  optsWrap.innerHTML = "";
   const all = allPhrases().filter(p => p.en !== q.en);
   const distractors = shuffle(all).slice(0, 3);
   const options = shuffle([q, ...distractors]);
-  const optsWrap = document.getElementById("quiz-opts");
-  optsWrap.innerHTML = "";
-  options.forEach(opt => {
-    const btn = document.createElement("button");
-    btn.className = "quiz-opt";
-    btn.textContent = opt.en;
-    btn.addEventListener("click", () => answer(btn, opt, q));
-    optsWrap.appendChild(btn);
-  });
+
+  if (listening) {
+    promptEl.style.display = "none";
+    listenBtn.style.display = "flex";
+    listenBtn.onclick = () => speak(q.en);
+    setTimeout(() => speak(q.en), 250);
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-opt";
+      btn.textContent = opt.jp;
+      btn.addEventListener("click", () => answer(btn, opt, q));
+      optsWrap.appendChild(btn);
+    });
+  } else {
+    listenBtn.style.display = "none";
+    promptEl.style.display = "block";
+    promptEl.textContent = q.jp;
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-opt";
+      btn.textContent = opt.en;
+      btn.addEventListener("click", () => answer(btn, opt, q));
+      optsWrap.appendChild(btn);
+    });
+  }
   document.getElementById("quiz-next").classList.remove("show");
 }
 function answer(btn, opt, q) {
   if (quiz.answered) return;
   quiz.answered = true;
   markActivity();
-  const correct = opt.en === q.en;
-  const btns = document.querySelectorAll(".quiz-opt");
-  btns.forEach(b => {
+  const listening = quiz.mode === "listening";
+  const correctText = listening ? q.jp : q.en;
+  const correct = (listening ? opt.jp : opt.en) === correctText;
+  document.querySelectorAll(".quiz-opt").forEach(b => {
     b.disabled = true;
-    if (b.textContent === q.en) b.classList.add("correct");
+    if (b.textContent === correctText) b.classList.add("correct");
   });
   if (!correct) btn.classList.add("wrong");
   if (correct) quiz.correct++;
   speak(q.en);
-  document.getElementById("quiz-sub").textContent = q.ph;
+  document.getElementById("quiz-sub").textContent = listening ? (q.en + "  /  " + q.ph) : q.ph;
   const nextBtn = document.getElementById("quiz-next");
   nextBtn.textContent = quiz.i + 1 < quiz.questions.length ? "次の問題へ →" : "結果を見る →";
   nextBtn.classList.add("show");
@@ -662,6 +899,13 @@ function finishQuiz() {
   saveState();
   renderStats();
 }
+document.querySelectorAll("[data-qmode]").forEach(b => b.addEventListener("click", () => {
+  quizMode = b.dataset.qmode;
+  document.querySelectorAll("[data-qmode]").forEach(x => x.classList.toggle("active", x === b));
+  document.getElementById("quiz-mode-desc").textContent = quizMode === "listening"
+    ? "英語の音声を聞いて、正しい意味を選びます。"
+    : "日本語の意味に合う英語表現を選びます。";
+}));
 document.getElementById("quiz-begin").addEventListener("click", startQuiz);
 document.getElementById("quiz-again").addEventListener("click", startQuiz);
 
