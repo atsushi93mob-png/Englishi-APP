@@ -674,6 +674,19 @@ const QA_ROLEPLAY = [
   { q: "Do you have any pets?", qjp: "ペットは飼っていますか？", sample: "Yes, I have a dog.", sampleJp: "はい、犬を飼っています。", keywords: ["yes", "no", "dog", "cat", "pet", "have", "don't"] },
   { q: "What's your job?", qjp: "お仕事は何ですか？", sample: "I'm a student.", sampleJp: "私は学生です。", keywords: ["i'm", "im", "student", "work", "job", "teacher", "engineer", "office"] },
   { q: "Can you speak English?", qjp: "英語は話せますか？", sample: "Yes, a little.", sampleJp: "はい、少しだけ。", keywords: ["yes", "no", "little", "bit", "can", "study", "learning"] },
+  { q: "How old are you?", qjp: "何歳ですか？", sample: "I'm twenty years old.", sampleJp: "20歳です。", keywords: ["i'm", "im", "years old", "old", "twenty", "thirty"] },
+  { q: "Do you have any brothers or sisters?", qjp: "兄弟や姉妹はいますか？", sample: "Yes, I have one sister.", sampleJp: "はい、姉（妹）が一人います。", keywords: ["yes", "no", "brother", "sister", "have", "one", "two", "only child"] },
+  { q: "What's your hobby?", qjp: "趣味は何ですか？", sample: "My hobby is playing tennis.", sampleJp: "趣味はテニスをすることです。", keywords: ["hobby", "like", "playing", "reading", "music", "cooking", "games"] },
+  { q: "How do you come here?", qjp: "ここへはどうやって来ますか？", sample: "I come here by train.", sampleJp: "電車で来ます。", keywords: ["by", "train", "bus", "car", "bike", "walk", "come"] },
+  { q: "What did you do yesterday?", qjp: "昨日は何をしましたか？", sample: "I studied English.", sampleJp: "英語を勉強しました。", keywords: ["i", "went", "studied", "watched", "played", "worked", "rested", "did"] },
+  { q: "What kind of music do you like?", qjp: "どんな音楽が好きですか？", sample: "I like pop music.", sampleJp: "ポップスが好きです。", keywords: ["like", "love", "pop", "rock", "jazz", "classical", "music"] },
+  { q: "What's your favorite season?", qjp: "好きな季節は？", sample: "My favorite season is spring.", sampleJp: "好きな季節は春です。", keywords: ["favorite", "like", "spring", "summer", "fall", "autumn", "winter", "season"] },
+  { q: "Where do you want to travel?", qjp: "どこへ旅行したいですか？", sample: "I want to travel to Italy.", sampleJp: "イタリアへ旅行したいです。", keywords: ["want", "travel", "go", "to", "visit", "like"] },
+  { q: "What are you doing now?", qjp: "今、何をしていますか？", sample: "I'm studying English.", sampleJp: "英語を勉強しています。", keywords: ["i'm", "im", "studying", "working", "reading", "watching", "learning", "doing"] },
+  { q: "Can you help me, please?", qjp: "手伝ってもらえますか？", sample: "Sure, no problem.", sampleJp: "もちろん、いいですよ。", keywords: ["sure", "yes", "of course", "ok", "okay", "no problem", "help"] },
+  { q: "How was your day?", qjp: "今日はどんな一日でしたか？", sample: "It was a good day.", sampleJp: "良い一日でした。", keywords: ["good", "great", "busy", "tired", "fun", "it was", "day", "nice"] },
+  { q: "What would you like to drink?", qjp: "お飲み物は何にしますか？", sample: "I'd like a coffee, please.", sampleJp: "コーヒーをお願いします。", keywords: ["i'd like", "id like", "coffee", "tea", "water", "juice", "please", "want"] },
+  { q: "Nice weather, isn't it?", qjp: "いい天気ですね？", sample: "Yes, it's beautiful today.", sampleJp: "はい、今日はとてもいい天気です。", keywords: ["yes", "no", "nice", "beautiful", "sunny", "warm", "it's", "its", "really"] },
 ];
 
 /* ---------- Storage ---------- */
@@ -1132,7 +1145,7 @@ function resetTalkStart() {
   document.getElementById("talk-done").style.display = "none";
 }
 function startTalk() {
-  talk = { items: shuffle(QA_ROLEPLAY).slice(0, 8), i: 0, good: 0, answered: false };
+  talk = { items: shuffle(QA_ROLEPLAY).slice(0, 10), i: 0, good: 0, answered: false };
   document.getElementById("talk-start").style.display = "none";
   document.getElementById("talk-done").style.display = "none";
   document.getElementById("talk-play").style.display = "block";
