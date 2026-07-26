@@ -203,6 +203,61 @@
   .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 0.9rem; line-height: 1.7; }
   footer { margin-top: 28px; color: var(--muted); font-size: 0.7rem; text-align: center; line-height: 1.7; }
   .reset-link { color: var(--muted); text-decoration: underline; cursor: pointer; background: none; border: none; font-family: inherit; font-size: 0.7rem; }
+
+  /* Daily goal */
+  .daily-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; }
+  .daily-head { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; }
+  .daily-head .goal-num { color: var(--accent); }
+  .daily-bar { height: 8px; background: rgba(255,255,255,0.12); border-radius: 5px; overflow: hidden; }
+  .daily-bar span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--good), var(--accent)); transition: width 0.5s; }
+  .daily-badge { display: none; margin-top: 8px; font-size: 0.78rem; color: var(--gold); font-weight: 700; }
+  .daily-badge.show { display: block; }
+
+  /* Tabs (4 items) */
+  .tab { padding: 9px 2px; font-size: 0.78rem; }
+
+  /* Segmented control */
+  .seg { display: flex; gap: 6px; }
+  .seg button { flex: 1; background: var(--panel-2); border: 1px solid var(--panel-border); color: var(--text); border-radius: 10px; padding: 9px 4px; font-size: 0.82rem; cursor: pointer; font-family: inherit; font-weight: 600; }
+  .seg button.active { background: var(--accent); color: #06192e; border-color: var(--accent); }
+
+  /* Settings */
+  .settings-group { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .settings-label { font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; }
+  .settings-hint { font-size: 0.72rem; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+  .settings-group .mini-btn { display: block; width: 100%; margin-top: 8px; text-align: center; padding: 10px; }
+  .settings-group .mini-btn.danger { color: var(--bad); border-color: rgba(255,122,122,0.4); }
+
+  /* Roleplay */
+  .talk-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 16px; padding: 20px 18px; }
+  .talk-role { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
+  .talk-q-row { display: flex; align-items: flex-start; gap: 10px; }
+  .talk-q-row > .talk-q-text { flex: 1; }
+  .talk-q { font-size: 1.2rem; font-weight: 700; line-height: 1.4; }
+  .talk-qjp { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
+  .talk-answer { margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--panel-2); font-size: 0.9rem; display: none; }
+  .talk-answer.show { display: block; }
+  .talk-answer .lbl { font-size: 0.72rem; color: var(--muted); }
+  .talk-answer .heard { font-weight: 600; margin-top: 2px; }
+  .talk-feedback { text-align: center; font-weight: 700; margin-top: 12px; font-size: 0.9rem; }
+  .talk-sample { margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(70,211,138,0.12); border: 1px solid rgba(70,211,138,0.3); display: none; }
+  .talk-sample.show { display: block; }
+  .talk-sample .lbl { font-size: 0.72rem; color: var(--good); font-weight: 700; }
+  .talk-sample .en { font-size: 1rem; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 8px; }
+  .talk-sample .jp { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+  .talk-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .talk-actions button { flex: 1; }
+
+  /* Light theme */
+  body.theme-light {
+    --bg1: #dbe7f4; --bg2: #f4f8fc;
+    --accent: #2b7bd6; --accent-dark: #1f5fa8;
+    --good: #1a9e63; --bad: #d94f4f; --gold: #b9820e;
+    --text: #10263c; --muted: #566b82;
+    --panel: rgba(0,0,0,0.045); --panel-2: rgba(0,0,0,0.07); --panel-border: rgba(0,0,0,0.13);
+  }
+  body.theme-light .daily-bar,
+  body.theme-light .cat-card .prog { background: rgba(0,0,0,0.10); }
 </style>
 </head>
 <body>
@@ -218,9 +273,17 @@
     <div class="stat"><div class="num" id="stat-streak">0</div><div class="lbl">連続日数</div></div>
   </div>
 
+  <div class="daily-card">
+    <div class="daily-head"><span>🎯 今日の学習</span><span class="goal-num" id="daily-count">0 / 10</span></div>
+    <div class="daily-bar"><span id="daily-fill"></span></div>
+    <div class="daily-badge" id="daily-badge">🎉 今日の目標を達成しました！すばらしい！</div>
+  </div>
+
   <div class="tabs">
     <button class="tab active" data-tab="learn">📚 学ぶ</button>
+    <button class="tab" data-tab="talk">💬 会話</button>
     <button class="tab" data-tab="quiz">✏️ クイズ</button>
+    <button class="tab" data-tab="settings">⚙️ 設定</button>
   </div>
 
   <!-- LEARN: category list -->
@@ -281,11 +344,105 @@
     </div>
   </div>
 
+  <!-- TALK (roleplay Q&A) -->
+  <div class="screen" id="screen-talk">
+    <div id="talk-start">
+      <div class="cat-card" style="text-align:center; cursor:default;">
+        <div class="emoji">💬</div>
+        <div class="title" style="margin-top:8px;">英語で会話の練習</div>
+        <div class="en" style="margin-top:6px; line-height:1.6;">相手からの簡単な英語の質問に、<br>マイクに向かって英語で答えます。<br>お手本の答えも確認できます。</div>
+      </div>
+      <button class="primary-btn" id="talk-begin" style="margin-top:14px;">会話を始める</button>
+      <div class="hint" id="talk-hint">マイクの許可が必要です（Chrome / Edge / Safari 推奨）。マイクが使えない場合も「お手本を見る」で学べます。</div>
+    </div>
+    <div id="talk-play" style="display:none;">
+      <div class="quiz-progress" id="talk-progress"></div>
+      <div class="talk-card">
+        <div class="talk-role">🧑 相手からの質問：</div>
+        <div class="talk-q-row">
+          <div class="talk-q-text">
+            <div class="talk-q" id="talk-q"></div>
+            <div class="talk-qjp" id="talk-qjp"></div>
+          </div>
+          <button class="speak-btn" id="talk-replay" title="質問をもう一度聞く">🔊</button>
+        </div>
+        <div class="talk-answer" id="talk-answer">
+          <div class="lbl">あなたの答え（認識結果）：</div>
+          <div class="heard" id="talk-heard"></div>
+        </div>
+        <div class="talk-feedback" id="talk-feedback"></div>
+        <div class="talk-sample" id="talk-sample">
+          <div class="lbl">お手本の答え</div>
+          <div class="en"><span id="talk-sample-en"></span><button class="speak-btn" id="talk-sample-speak" style="width:32px;height:32px;font-size:0.95rem;">🔊</button></div>
+          <div class="jp" id="talk-sample-jp"></div>
+        </div>
+        <div class="talk-actions">
+          <button class="mic-btn" id="talk-mic">🎤 英語で答える</button>
+          <button class="learn-btn" id="talk-reveal">お手本を見る</button>
+        </div>
+      </div>
+      <button class="next-btn" id="talk-next">次の質問へ →</button>
+    </div>
+    <div id="talk-done" style="display:none;">
+      <div class="quiz-card">
+        <div class="quiz-result">
+          <div class="big" id="talk-score"></div>
+          <div class="msg" id="talk-msg"></div>
+          <div class="sub" id="talk-detail"></div>
+        </div>
+        <button class="primary-btn" id="talk-again">もう一度</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <div class="settings-group">
+      <div class="settings-label">🐢 音声の速度</div>
+      <div class="seg" id="rate-seg">
+        <button data-rate="0.6">ゆっくり</button>
+        <button data-rate="0.9">ふつう</button>
+        <button data-rate="1.1">はやい</button>
+      </div>
+      <button class="mini-btn" id="rate-test">🔊 テスト再生</button>
+    </div>
+    <div class="settings-group">
+      <div class="settings-label">🌗 テーマ（見た目）</div>
+      <div class="seg" id="theme-seg">
+        <button data-theme="auto">自動</button>
+        <button data-theme="light">ライト</button>
+        <button data-theme="dark">ダーク</button>
+      </div>
+      <div class="settings-hint">「自動」は端末の設定に合わせて切り替わります。</div>
+    </div>
+    <div class="settings-group">
+      <div class="settings-label">🎯 1日の目標</div>
+      <div class="seg" id="goal-seg">
+        <button data-goal="5">5</button>
+        <button data-goal="10">10</button>
+        <button data-goal="20">20</button>
+        <button data-goal="30">30</button>
+      </div>
+      <div class="settings-hint">学ぶ・クイズ・会話などの学習回数で数えます。</div>
+    </div>
+    <div class="settings-group">
+      <div class="settings-label">📥 データのバックアップ</div>
+      <button class="mini-btn" id="export-btn">💾 書き出し（ダウンロード）</button>
+      <label class="mini-btn" for="import-file" style="cursor:pointer;">📂 読み込み（ファイルを選択）</label>
+      <input type="file" id="import-file" accept="application/json,.json" style="display:none">
+      <div class="settings-hint" id="backup-status">記録をファイルに保存すれば、別の端末やブラウザに引き継げます。</div>
+    </div>
+    <div class="settings-group">
+      <div class="settings-label">⚠️ リセット</div>
+      <button class="mini-btn danger" id="reset-all">記録をすべて消去する</button>
+      <div class="settings-hint">覚えた表現・連続日数・今日の学習をすべて削除します（元に戻せません）。</div>
+    </div>
+  </div>
+
   <footer>
     音声はブラウザの読み上げ機能を使用します（音が出ない場合は端末の音量をご確認ください）。<br>
-    発音チェックはマイクの許可が必要です（Chrome / Edge / Safari 推奨）。<br>
-    学習データはこのブラウザ内にのみ保存されます。 ·
-    <button class="reset-link" id="reset-all">記録をリセット</button><br>
+    発音チェック・会話練習はマイクの許可が必要です（Chrome / Edge / Safari 推奨）。<br>
+    学習データはこのブラウザ内にのみ保存されます。<br>
     <a class="reset-link" href="focus-timer.html">🌱 フォーカス・タイマー・ガーデンはこちら</a>
   </footer>
 </div>
@@ -501,14 +658,35 @@ const CATEGORIES = [
   },
 ];
 
+/* ---------- Roleplay Q&A data ---------- */
+// Each item: an English question the app asks, a Japanese hint, a sample answer,
+// and keywords that count as a "good" answer (matched as lowercase substrings).
+const QA_ROLEPLAY = [
+  { q: "Hi! What's your name?", qjp: "こんにちは！お名前は？", sample: "My name is Ken.", sampleJp: "私の名前はケンです。", keywords: ["name", "i'm", "im", "call me"] },
+  { q: "Where are you from?", qjp: "出身はどちらですか？", sample: "I'm from Japan.", sampleJp: "日本出身です。", keywords: ["from", "japan", "i'm", "im"] },
+  { q: "How are you today?", qjp: "今日の調子はどうですか？", sample: "I'm good, thank you.", sampleJp: "元気です、ありがとう。", keywords: ["good", "fine", "great", "ok", "okay", "not bad", "tired", "i'm", "im"] },
+  { q: "What do you like to do?", qjp: "何をするのが好きですか？", sample: "I like watching movies.", sampleJp: "映画を見るのが好きです。", keywords: ["like", "love", "enjoy", "playing", "watching"] },
+  { q: "What time do you get up?", qjp: "何時に起きますか？", sample: "I get up at seven.", sampleJp: "7時に起きます。", keywords: ["get up", "wake", "at", "o'clock", "seven", "six", "eight"] },
+  { q: "What did you have for breakfast?", qjp: "朝ごはんは何を食べましたか？", sample: "I had rice and eggs.", sampleJp: "ご飯と卵を食べました。", keywords: ["had", "ate", "eat", "rice", "bread", "egg", "coffee", "nothing"] },
+  { q: "What's your favorite food?", qjp: "好きな食べ物は何ですか？", sample: "My favorite food is sushi.", sampleJp: "好きな食べ物はお寿司です。", keywords: ["favorite", "like", "love", "food", "sushi", "pizza", "ramen"] },
+  { q: "How's the weather today?", qjp: "今日の天気はどうですか？", sample: "It's sunny today.", sampleJp: "今日は晴れています。", keywords: ["sunny", "rainy", "cloudy", "cold", "hot", "warm", "snow", "weather", "it's", "its"] },
+  { q: "What are you going to do this weekend?", qjp: "今週末は何をしますか？", sample: "I'm going to see a movie.", sampleJp: "映画を見に行くつもりです。", keywords: ["going", "will", "want", "weekend", "movie", "rest", "home", "i'm", "im"] },
+  { q: "Do you have any pets?", qjp: "ペットは飼っていますか？", sample: "Yes, I have a dog.", sampleJp: "はい、犬を飼っています。", keywords: ["yes", "no", "dog", "cat", "pet", "have", "don't"] },
+  { q: "What's your job?", qjp: "お仕事は何ですか？", sample: "I'm a student.", sampleJp: "私は学生です。", keywords: ["i'm", "im", "student", "work", "job", "teacher", "engineer", "office"] },
+  { q: "Can you speak English?", qjp: "英語は話せますか？", sample: "Yes, a little.", sampleJp: "はい、少しだけ。", keywords: ["yes", "no", "little", "bit", "can", "study", "learning"] },
+];
+
 /* ---------- Storage ---------- */
 const STORE_KEY = "eikaiwa_v1";
+function defaultState() {
+  return { learned: {}, lastDay: null, streak: 0, rate: 0.9, theme: "auto", dailyGoal: 10, progress: { day: null, count: 0 } };
+}
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return Object.assign(defaultState(), JSON.parse(raw));
   } catch (e) {}
-  return { learned: {}, lastDay: null, streak: 0 };
+  return defaultState();
 }
 function saveState() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
@@ -529,6 +707,16 @@ function markActivity() {
   state.lastDay = t;
   saveState();
 }
+// Increment today's learning count (resets when the day changes).
+function bumpDaily() {
+  const t = todayStr();
+  if (!state.progress || state.progress.day !== t) state.progress = { day: t, count: 0 };
+  state.progress.count++;
+  saveState();
+  renderDaily();
+}
+// A single learning action: keeps the streak and daily progress in sync.
+function learningEvent() { markActivity(); bumpDaily(); }
 
 /* ---------- Helpers ---------- */
 function phraseKey(catId, i) { return catId + ":" + i; }
@@ -553,7 +741,7 @@ function speak(text) {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "en-US";
-  u.rate = 0.9;
+  u.rate = state.rate || 0.9;
   const en = voices.find(v => /en[-_]US/i.test(v.lang)) || voices.find(v => /^en/i.test(v.lang));
   if (en) u.voice = en;
   speechSynthesis.speak(u);
@@ -616,6 +804,30 @@ function renderStats() {
   document.getElementById("stat-learned").textContent = learnedCount();
   document.getElementById("stat-total").textContent = totalPhrases();
   document.getElementById("stat-streak").textContent = state.streak || 0;
+}
+function renderDaily() {
+  const goal = state.dailyGoal || 10;
+  const t = todayStr();
+  const count = (state.progress && state.progress.day === t) ? state.progress.count : 0;
+  document.getElementById("daily-count").textContent = count + " / " + goal;
+  const pct = Math.min(100, Math.round((count / goal) * 100));
+  document.getElementById("daily-fill").style.width = pct + "%";
+  document.getElementById("daily-badge").classList.toggle("show", count >= goal);
+}
+
+/* ---------- Theme ---------- */
+function applyTheme() {
+  const t = state.theme || "auto";
+  let light;
+  if (t === "auto") light = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches);
+  else light = (t === "light");
+  document.body.classList.toggle("theme-light", light);
+}
+if (window.matchMedia) {
+  const mq = window.matchMedia("(prefers-color-scheme: light)");
+  const onChange = () => { if ((state.theme || "auto") === "auto") applyTheme(); };
+  if (mq.addEventListener) mq.addEventListener("change", onChange);
+  else if (mq.addListener) mq.addListener(onChange);
 }
 
 /* ---------- Category grid ---------- */
@@ -680,7 +892,7 @@ function renderPhrases() {
     div.querySelector(".learn-btn").addEventListener("click", () => {
       const key = phraseKey(currentCat.id, i);
       state.learned[key] = !state.learned[key];
-      if (state.learned[key]) markActivity();
+      if (state.learned[key]) learningEvent();
       saveState();
       renderPhrases();
       renderStats();
@@ -720,7 +932,7 @@ function startPronCheck(p, i, micBtn, resultBox) {
         '<div style="margin-top:6px;">' + marked + '</div>' +
         '<div class="heard">認識された発音：' + (transcript ? escapeHtml(transcript) : "（聞き取れませんでした）") + '</div>';
       // A confident attempt counts as learning activity, and a great one marks it learned.
-      markActivity();
+      learningEvent();
       if (score >= 80 && !isLearned(currentCat.id, i)) {
         state.learned[phraseKey(currentCat.id, i)] = true;
         saveState();
@@ -770,13 +982,15 @@ function renderDialogue() {
 
 /* ---------- Screens & Tabs ---------- */
 function showScreen(id) {
-  ["screen-cats", "screen-detail", "screen-quiz"].forEach(s => {
+  ["screen-cats", "screen-detail", "screen-quiz", "screen-talk", "screen-settings"].forEach(s => {
     document.getElementById(s).classList.toggle("active", s === id);
   });
 }
 function selectTab(tab) {
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
   if (tab === "learn") { renderCats(); showScreen("screen-cats"); }
+  else if (tab === "talk") { resetTalkStart(); showScreen("screen-talk"); }
+  else if (tab === "settings") { renderSettings(); showScreen("screen-settings"); }
   else { resetQuizStart(); showScreen("screen-quiz"); }
 }
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => selectTab(t.dataset.tab)));
@@ -863,7 +1077,7 @@ function renderQuestion() {
 function answer(btn, opt, q) {
   if (quiz.answered) return;
   quiz.answered = true;
-  markActivity();
+  learningEvent();
   const listening = quiz.mode === "listening";
   const correctText = listening ? q.jp : q.en;
   const correct = (listening ? opt.jp : opt.en) === correctText;
@@ -910,18 +1124,177 @@ document.querySelectorAll("[data-qmode]").forEach(b => b.addEventListener("click
 document.getElementById("quiz-begin").addEventListener("click", startQuiz);
 document.getElementById("quiz-again").addEventListener("click", startQuiz);
 
+/* ---------- Roleplay (English Q&A) ---------- */
+let talk = null;
+function resetTalkStart() {
+  document.getElementById("talk-start").style.display = "block";
+  document.getElementById("talk-play").style.display = "none";
+  document.getElementById("talk-done").style.display = "none";
+}
+function startTalk() {
+  talk = { items: shuffle(QA_ROLEPLAY).slice(0, 8), i: 0, good: 0, answered: false };
+  document.getElementById("talk-start").style.display = "none";
+  document.getElementById("talk-done").style.display = "none";
+  document.getElementById("talk-play").style.display = "block";
+  renderTalk();
+}
+function renderTalk() {
+  talk.answered = false;
+  const item = talk.items[talk.i];
+  document.getElementById("talk-progress").textContent = "第 " + (talk.i + 1) + " 問 / " + talk.items.length + " 問";
+  document.getElementById("talk-q").textContent = item.q;
+  document.getElementById("talk-qjp").textContent = item.qjp;
+  document.getElementById("talk-answer").classList.remove("show");
+  document.getElementById("talk-heard").textContent = "";
+  document.getElementById("talk-feedback").textContent = "";
+  document.getElementById("talk-sample").classList.remove("show");
+  document.getElementById("talk-sample-en").textContent = item.sample;
+  document.getElementById("talk-sample-jp").textContent = item.sampleJp;
+  const mic = document.getElementById("talk-mic");
+  mic.classList.remove("recording");
+  mic.disabled = !speechRecSupported;
+  mic.textContent = speechRecSupported ? "🎤 英語で答える" : "🎤 マイク非対応";
+  document.getElementById("talk-next").classList.remove("show");
+  document.getElementById("talk-next").textContent = talk.i + 1 < talk.items.length ? "次の質問へ →" : "結果を見る →";
+  setTimeout(() => speak(item.q), 250);
+}
+function talkFinishTurn() {
+  if (talk.answered) return;
+  talk.answered = true;
+  document.getElementById("talk-sample").classList.add("show");
+  document.getElementById("talk-next").classList.add("show");
+  learningEvent();
+}
+function talkListen() {
+  if (!speechRecSupported) return;
+  const item = talk.items[talk.i];
+  const mic = document.getElementById("talk-mic");
+  const ansBox = document.getElementById("talk-answer");
+  const heard = document.getElementById("talk-heard");
+  const fb = document.getElementById("talk-feedback");
+  ansBox.classList.add("show");
+  heard.textContent = "🎤 聞いています… 英語で話してください";
+  fb.textContent = "";
+  mic.classList.add("recording");
+  mic.textContent = "● 録音中…";
+  recognizeSpeech(
+    null,
+    (transcript) => {
+      heard.textContent = transcript ? escapeHtml(transcript) : "（聞き取れませんでした）";
+      const said = (transcript || "").toLowerCase();
+      const matched = item.keywords.some(k => said.indexOf(k) !== -1);
+      if (transcript && matched) { fb.textContent = "👍 いいね！しっかり伝わっています。"; fb.style.color = "var(--good)"; talk.good++; }
+      else if (transcript) { fb.textContent = "🙂 答えられました！お手本と比べてみましょう。"; fb.style.color = "var(--gold)"; }
+      else { fb.textContent = ""; }
+    },
+    (err) => {
+      let msg;
+      if (err === "not-allowed" || err === "service-not-allowed") msg = "マイクの使用が許可されていません。";
+      else if (err === "no-speech") msg = "音声を検出できませんでした。";
+      else if (err === "unsupported") msg = "このブラウザは音声認識に対応していません。";
+      else msg = "音声認識でエラーが発生しました。";
+      heard.textContent = "⚠️ " + msg;
+      fb.textContent = "";
+    },
+    () => {
+      mic.classList.remove("recording");
+      mic.textContent = "🎤 もう一度話す";
+      talkFinishTurn();
+    }
+  );
+}
+document.getElementById("talk-begin").addEventListener("click", startTalk);
+document.getElementById("talk-again").addEventListener("click", startTalk);
+document.getElementById("talk-mic").addEventListener("click", talkListen);
+document.getElementById("talk-reveal").addEventListener("click", talkFinishTurn);
+document.getElementById("talk-replay").addEventListener("click", () => speak(talk.items[talk.i].q));
+document.getElementById("talk-sample-speak").addEventListener("click", () => speak(talk.items[talk.i].sample));
+document.getElementById("talk-next").addEventListener("click", () => {
+  talk.i++;
+  if (talk.i < talk.items.length) renderTalk();
+  else finishTalk();
+});
+function finishTalk() {
+  document.getElementById("talk-play").style.display = "none";
+  document.getElementById("talk-done").style.display = "block";
+  const total = talk.items.length;
+  document.getElementById("talk-score").textContent = "🗣️ " + total + " 問";
+  document.getElementById("talk-msg").textContent = "会話の練習おつかれさま！";
+  document.getElementById("talk-detail").textContent = "しっかり伝わった答え：" + talk.good + " / " + total + "　—　声に出すほど上達します。";
+}
+
+/* ---------- Settings ---------- */
+function renderSettings() {
+  document.querySelectorAll("#rate-seg button").forEach(b => b.classList.toggle("active", parseFloat(b.dataset.rate) === (state.rate || 0.9)));
+  document.querySelectorAll("#theme-seg button").forEach(b => b.classList.toggle("active", b.dataset.theme === (state.theme || "auto")));
+  document.querySelectorAll("#goal-seg button").forEach(b => b.classList.toggle("active", parseInt(b.dataset.goal, 10) === (state.dailyGoal || 10)));
+}
+document.querySelectorAll("#rate-seg button").forEach(b => b.addEventListener("click", () => {
+  state.rate = parseFloat(b.dataset.rate); saveState(); renderSettings(); speak("This is the speed.");
+}));
+document.querySelectorAll("#theme-seg button").forEach(b => b.addEventListener("click", () => {
+  state.theme = b.dataset.theme; saveState(); applyTheme(); renderSettings();
+}));
+document.querySelectorAll("#goal-seg button").forEach(b => b.addEventListener("click", () => {
+  state.dailyGoal = parseInt(b.dataset.goal, 10); saveState(); renderSettings(); renderDaily();
+}));
+document.getElementById("rate-test").addEventListener("click", () => speak("Hello! Nice to meet you."));
+
+// Backup: export the whole state as a downloadable JSON file.
+document.getElementById("export-btn").addEventListener("click", () => {
+  try {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "eikaiwa-backup.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    document.getElementById("backup-status").textContent = "✅ 書き出しました（eikaiwa-backup.json）。";
+  } catch (e) {
+    document.getElementById("backup-status").textContent = "⚠️ 書き出しに失敗しました。";
+  }
+});
+// Backup: import a JSON file and restore the state from it.
+document.getElementById("import-file").addEventListener("change", (ev) => {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || typeof data !== "object" || typeof data.learned !== "object") throw new Error("bad");
+      state = Object.assign(defaultState(), data);
+      saveState();
+      applyTheme();
+      renderStats(); renderDaily(); renderCats(); renderSettings();
+      document.getElementById("backup-status").textContent = "✅ 読み込みました。記録を復元しました。";
+    } catch (e) {
+      document.getElementById("backup-status").textContent = "⚠️ 読み込みに失敗しました。正しいバックアップファイルか確認してください。";
+    }
+    ev.target.value = "";
+  };
+  reader.readAsText(file);
+});
+
 /* ---------- Reset ---------- */
 document.getElementById("reset-all").addEventListener("click", () => {
-  if (confirm("覚えた記録と連続日数をすべて消去します。よろしいですか？")) {
-    state = { learned: {}, lastDay: null, streak: 0 };
+  if (confirm("覚えた記録・連続日数・今日の学習をすべて消去します。よろしいですか？")) {
+    const keepTheme = state.theme, keepRate = state.rate, keepGoal = state.dailyGoal;
+    state = defaultState();
+    state.theme = keepTheme; state.rate = keepRate; state.dailyGoal = keepGoal;
     saveState();
-    renderStats();
-    renderCats();
+    applyTheme();
+    renderStats(); renderDaily(); renderCats(); renderSettings();
   }
 });
 
 /* ---------- Init ---------- */
+applyTheme();
 renderStats();
+renderDaily();
 renderCats();
 </script>
 </body>
